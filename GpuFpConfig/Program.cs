@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using OpenCL.Net;
 using Environment = OpenCL.Net.Environment;
 
@@ -114,7 +113,8 @@ namespace GpuFpConfig
 
         private static void DumpWorkGroupInfo(Context context, Device device)
         {
-            var resourceName = "GpuFpConfig.sum.cl";
+            const string resourceName = "GpuFpConfig.sum.cl";
+
             var source = GetProgramSourceFromResource(resourceName);
 
             var strings = new[] {source};
@@ -169,34 +169,16 @@ namespace GpuFpConfig
             var floatsB = Enumerable.Range(1, size).Select(n => (float)n).ToArray();
             var floatsC = new float[size];
 
-            const int cb = sizeof (float)*size;
-            var ha = Marshal.AllocHGlobal(cb);
-            var hb = Marshal.AllocHGlobal(cb);
-            var hc = Marshal.AllocHGlobal(cb);
-
-            Marshal.Copy(floatsA, 0, ha, size);
-            Marshal.Copy(floatsB, 0, hb, size);
-
-            var ba = Cl.CreateBuffer(context, MemFlags.ReadOnly | MemFlags.UseHostPtr, (IntPtr)cb, ha, out errorCode);
-            errorCode.Check();
-
-            var bb = Cl.CreateBuffer(context, MemFlags.ReadOnly | MemFlags.UseHostPtr, (IntPtr)cb, hb, out errorCode);
-            errorCode.Check();
-
-            var bc = Cl.CreateBuffer(context, MemFlags.WriteOnly | MemFlags.UseHostPtr, (IntPtr)cb, hc, out errorCode);
-            errorCode.Check();
+            var mem1 = new MyPinnedArrayOfStruct(context, floatsA);
+            var mem2 = new MyPinnedArrayOfStruct(context, floatsB);
+            var mem3 = new MyPinnedArrayOfStruct(context, floatsC, MemMode.WriteOnly);
 
             var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
             errorCode.Check();
 
-            errorCode = Cl.SetKernelArg(kernel, 0, ba);
-            errorCode.Check();
-
-            errorCode = Cl.SetKernelArg(kernel, 1, bb);
-            errorCode.Check();
-
-            errorCode = Cl.SetKernelArg(kernel, 2, bc);
-            errorCode.Check();
+            errorCode = Cl.SetKernelArg(kernel, 0, mem1.Buffer); errorCode.Check();
+            errorCode = Cl.SetKernelArg(kernel, 1, mem2.Buffer); errorCode.Check();
+            errorCode = Cl.SetKernelArg(kernel, 2, mem3.Buffer); errorCode.Check();
 
             var globalWorkSize = new[] { (IntPtr)size};
             Event e1;
@@ -213,13 +195,20 @@ namespace GpuFpConfig
             errorCode.Check();
 
             Event e2;
-            errorCode = Cl.EnqueueReadBuffer(commandQueue, bc, Bool.False, IntPtr.Zero, (IntPtr)cb, hc, 0, null, out e2);
+            errorCode = Cl.EnqueueReadBuffer(
+                commandQueue,
+                mem3.Buffer,
+                Bool.False, // blockingRead
+                IntPtr.Zero, // offsetInBytes
+                (IntPtr)mem3.Size,
+                mem3.Handle,
+                0, // numEventsInWaitList
+                null, // eventWaitList
+                out e2);
             errorCode.Check();
 
             var evs = new[] {e2};
             Cl.WaitForEvents((uint)evs.Length, evs);
-
-            Marshal.Copy(hc, floatsC, 0, size);
         }
 
         private static string GetProgramSourceFromResource(string resourceName)
