@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using ClUtils;
 using OpenCL.Net;
 using Environment = OpenCL.Net.Environment;
 
-namespace SaveDisassembly
+namespace SaveBinaries
 {
     internal static class Program
     {
@@ -34,18 +35,17 @@ namespace SaveDisassembly
         private static void EnumerateDevices(Context context, IReadOnlyCollection<Device> devices)
         {
             foreach (var device in devices)
-                SaveDisassembly(context, device);
+                SaveBinaries(context, device);
 
             Console.WriteLine();
         }
 
-        private static void SaveDisassembly(Context context, Device device)
+        private static void SaveBinaries(Context context, Device device)
         {
-            const string resourceName = "SaveDisassembly.sum.cl";
-
+            const string resourceName = "SaveBinaries.sum.cl";
             var source = ProgramUtils.GetProgramSourceFromResource(Assembly.GetExecutingAssembly(), resourceName);
             var program = ProgramUtils.BuildProgramForDevice(context, device, source);
-            ProgramUtils.SaveBinaries(program, $"{resourceName}_binary.txt");
+            ProgramUtils.SaveBinaries(program, $"{Path.GetFileNameWithoutExtension(resourceName)}_binary.txt");
         }
     }
 }

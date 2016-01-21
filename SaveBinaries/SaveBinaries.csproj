@@ -7,8 +7,8 @@
     <ProjectGuid>{F6EABD02-2464-45D9-A5AD-48B3CCD2AE22}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SaveDisassembly</RootNamespace>
-    <AssemblyName>SaveDisassembly</AssemblyName>
+    <RootNamespace>SaveBinaries</RootNamespace>
+    <AssemblyName>SaveBinaries</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
