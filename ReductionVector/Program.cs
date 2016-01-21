@@ -75,7 +75,7 @@ namespace ReductionVector
                 errorCode = Cl.SetKernelArg(kernel, 0, mem1.Buffer);
                 errorCode.Check("SetKernelArg(0)");
 
-                errorCode = Cl.SetKernelArg<float>(kernel, 1, localWorkSize);
+                errorCode = Cl.SetKernelArg<float>(kernel, 1, localWorkSize*4);
                 errorCode.Check("SetKernelArg(1)");
 
                 errorCode = Cl.SetKernelArg(kernel, 2, mem2.Buffer);
@@ -87,7 +87,7 @@ namespace ReductionVector
                     kernel,
                     1, // workDim
                     null, // globalWorkOffset
-                    new[] { (IntPtr)globalWorkSize },
+                    new[] { (IntPtr)(globalWorkSize/4) },
                     new[] { (IntPtr)localWorkSize },
                     0, // numEventsInWaitList
                     null, // eventWaitList

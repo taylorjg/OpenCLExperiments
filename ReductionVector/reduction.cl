@@ -1,7 +1,7 @@
 kernel void reduction(
-	global const float *restrict data,
-	local float *restrict partialSums,
-	global float *restrict workGroupResults)
+	global const float4 *restrict data,
+	local float4 *restrict partialSums,
+	global float4 *restrict workGroupResults)
 {
 	const int globalId = get_global_id(0);
 	const int localId = get_local_id(0);
