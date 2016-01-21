@@ -40,12 +40,12 @@ namespace GpuFpConfig
             Console.WriteLine();
 
             foreach (var device in devices)
-                DumpWorkGroupInfo(context, device);
+                RunSumKernel(context, device);
 
             Console.WriteLine();
         }
 
-        private static void DumpWorkGroupInfo(Context context, Device device)
+        private static void RunSumKernel(Context context, Device device)
         {
             const string resourceName = "GpuFpConfig.sum.cl";
 
@@ -57,6 +57,7 @@ namespace GpuFpConfig
 
             var kernels = Cl.CreateKernelsInProgram(program, out errorCode);
             errorCode.Check("CreateKernelsInProgram");
+
             var kernel = kernels[0];
 
             Dump.WorkGroupInfo(kernel, device);
