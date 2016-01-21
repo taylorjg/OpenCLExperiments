@@ -36,3 +36,4 @@ Playing around with [OpenCL](https://www.khronos.org/opencl/) from C# using [Ope
     * _Senior Lecturer in High Performance Computing and Architectures_
     * [OpenCL: A Hands-on Introduction](https://www.cs.bris.ac.uk/home/simonm/SC13/OpenCL_slides_SC13.pdf)
     * [COMPILING OPENCL KERNELS](http://www.cs.bris.ac.uk/home/simonm/montblanc/AdvancedOpenCL_full.pdf)
+* [OpenCL™ Optimization Case Study: Simple Reductions](http://developer.amd.com/resources/documentation-articles/articles-whitepapers/opencl-optimization-case-study-simple-reductions/)
