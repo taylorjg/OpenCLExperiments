@@ -49,55 +49,17 @@ namespace GpuFpConfig
         {
             const string resourceName = "GpuFpConfig.sum.cl";
 
-            var source = GetProgramSourceFromResource(resourceName);
-
-            var strings = new[] {source};
-            var lengths = new[] {(IntPtr) source.Length};
-
             ErrorCode errorCode;
-            var program = Cl.CreateProgramWithSource(context, (uint)strings.Length, strings, lengths, out errorCode);
-            errorCode.Check("CreateProgramWithSource");
 
-            errorCode = Cl.BuildProgram(program, 1, new [] {device}, string.Empty, null, IntPtr.Zero);
-            errorCode.Check("BuildProgram");
-
-            var binSizes = Cl.GetProgramInfo(program, ProgramInfo.BinarySizes, out errorCode).CastToArray<int>(1);
-            errorCode.Check("GetProgramInfo(ProgramInfo.BinarySizes)");
-            var binSize = binSizes[0];
-            Console.WriteLine($"binSize: {binSize}");
-
-            var buffer = new InfoBuffer((IntPtr)binSize);
-            var buffers = new InfoBufferArray(buffer);
-            IntPtr ret;
-            errorCode = Cl.GetProgramInfo(program, ProgramInfo.Binaries, (IntPtr)4, buffers, out ret);
-            errorCode.Check("GetProgramInfo(ProgramInfo.Binaries)");
-
-            var disassemblyBytes = buffer.CastToArray<byte>(binSize);
-            File.WriteAllBytes($"{resourceName}_disassembly.txt", disassemblyBytes);
+            var source = ProgramUtils.GetProgramSourceFromResource(Assembly.GetExecutingAssembly(), resourceName);
+            var program = ProgramUtils.BuildProgramForDevice(context, device, source);
+            ProgramUtils.SaveDisassembly(program, $"{resourceName}_disassembly.txt");
 
             var kernels = Cl.CreateKernelsInProgram(program, out errorCode);
             errorCode.Check("CreateKernelsInProgram");
             var kernel = kernels[0];
 
-            var workGroupSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
-            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
-            Console.WriteLine($"WorkGroupSize: {workGroupSize}");
-
-            var localMemSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.LocalMemSize, out errorCode).CastTo<int>();
-            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.LocalMemSize)");
-            Console.WriteLine($"LocalMemSize: {localMemSize}");
-
-            var compileWorkGroupSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.CompileWorkGroupSize, out errorCode).CastTo<int>();
-            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.CompileWorkGroupSize)");
-            Console.WriteLine($"CompileWorkGroupSize: {compileWorkGroupSize}");
-
-            var preferredWorkGroupSizeMultiple = Cl.GetKernelWorkGroupInfo(kernel, device, (KernelWorkGroupInfo)0x11B3, out errorCode).CastTo<int>();
-            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.PreferredWorkGroupSizeMultiple)");
-            Console.WriteLine($"PreferredWorkGroupSizeMultiple: {preferredWorkGroupSizeMultiple}");
-
-            var privateMemSize = Cl.GetKernelWorkGroupInfo(kernel, device, (KernelWorkGroupInfo)0x11B4, out errorCode).CastTo<int>();
-            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.PrivateMemSize)");
-            Console.WriteLine($"PrivateMemSize: {privateMemSize}");
+            Dump.WorkGroupInfo(kernel, device);
 
             const int size = 1024;
 
@@ -150,17 +112,6 @@ namespace GpuFpConfig
 
             Console.WriteLine($"floatsC[0]: {floatsC[0]}");
             Console.WriteLine($"floatsC[1023]: {floatsC[1023]}");
-        }
-
-        private static string GetProgramSourceFromResource(string resourceName)
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
-            {
-                if (stream == null) throw new ApplicationException($"Failed to load resource {resourceName}");
-                var streamReader = new StreamReader(stream);
-                return streamReader.ReadToEnd();
-            }
         }
     }
 }

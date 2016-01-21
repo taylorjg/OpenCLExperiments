@@ -32,7 +32,8 @@ namespace ClUtils
             if ((fpConfig & ClFpRoundToInf) != 0) Console.WriteLine("CL_FP_ROUND_TO_INF");
             if ((fpConfig & ClFpFma) != 0) Console.WriteLine("CL_FP_FMA");
             if ((fpConfig & ClFpSoftFloat) != 0) Console.WriteLine("CL_FP_SOFT_FLOAT");
-            if ((fpConfig & ClFpCorrectlyRoundedDivideSqrt) != 0) Console.WriteLine("CL_FP_CORRECTLY_ROUNDED_DIVIDE_SQRT");
+            if ((fpConfig & ClFpCorrectlyRoundedDivideSqrt) != 0)
+                Console.WriteLine("CL_FP_CORRECTLY_ROUNDED_DIVIDE_SQRT");
 
             var vendor = Cl.GetDeviceInfo(device, DeviceInfo.Vendor, out errorCode).ToString();
             Console.WriteLine($"Vendor: {vendor}");
@@ -57,9 +58,35 @@ namespace ClUtils
             errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkItemSizes)");
             Console.WriteLine($"MaxWorkItemSizes: {maxWorkItemSizes}");
 
-            var maxWorkItemDimensions = Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemDimensions, out errorCode).CastTo<int>();
+            var maxWorkItemDimensions =
+                Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemDimensions, out errorCode).CastTo<int>();
             errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkItemDimensions)");
             Console.WriteLine($"MaxWorkItemDimensions: {maxWorkItemDimensions}");
+        }
+
+        public static void WorkGroupInfo(Kernel kernel, Device device)
+        {
+            ErrorCode errorCode;
+
+            var workGroupSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
+            Console.WriteLine($"WorkGroupSize: {workGroupSize}");
+
+            var preferredWorkGroupSizeMultiple = Cl.GetKernelWorkGroupInfo(kernel, device, (KernelWorkGroupInfo)0x11B3, out errorCode).CastTo<int>();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.PreferredWorkGroupSizeMultiple)");
+            Console.WriteLine($"PreferredWorkGroupSizeMultiple: {preferredWorkGroupSizeMultiple}");
+
+            var compileWorkGroupSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.CompileWorkGroupSize, out errorCode).CastTo<int>();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.CompileWorkGroupSize)");
+            Console.WriteLine($"CompileWorkGroupSize: {compileWorkGroupSize}");
+
+            var localMemSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.LocalMemSize, out errorCode).CastTo<int>();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.LocalMemSize)");
+            Console.WriteLine($"LocalMemSize: {localMemSize}");
+
+            var privateMemSize = Cl.GetKernelWorkGroupInfo(kernel, device, (KernelWorkGroupInfo) 0x11B4, out errorCode).CastTo<int>();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.PrivateMemSize)");
+            Console.WriteLine($"PrivateMemSize: {privateMemSize}");
         }
     }
 }
