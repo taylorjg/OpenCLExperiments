@@ -6,7 +6,7 @@ using ClUtils;
 using OpenCL.Net;
 using Environment = OpenCL.Net.Environment;
 
-namespace Reduction
+namespace ReductionScalar
 {
     internal static class Program
     {
@@ -43,7 +43,7 @@ namespace Reduction
 
         private static void Reduction(Context context, Device device)
         {
-            const string resourceName = "Reduction.reduction.cl";
+            const string resourceName = "ReductionScalar.reduction.cl";
 
             var source = ProgramUtils.GetProgramSourceFromResource(Assembly.GetExecutingAssembly(), resourceName);
             var program = ProgramUtils.BuildProgramForDevice(context, device, source);

@@ -7,8 +7,8 @@
     <ProjectGuid>{0862446E-3D51-4323-821B-EEC3CF33CCE6}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Reduction</RootNamespace>
-    <AssemblyName>Reduction</AssemblyName>
+    <RootNamespace>ReductionScalar</RootNamespace>
+    <AssemblyName>ReductionScalar</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
