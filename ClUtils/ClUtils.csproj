@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="Dump.cs" />
     <Compile Include="ErrorCodeExtensions.cs" />
+    <Compile Include="IPinnedArrayOfStruct.cs" />
+    <Compile Include="KernelRunner.cs" />
     <Compile Include="MemMode.cs" />
     <Compile Include="PinnedArrayOfStruct.cs" />
     <Compile Include="ProgramUtils.cs" />

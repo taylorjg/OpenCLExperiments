@@ -48,12 +48,11 @@ namespace GpuFpConfig
         {
             const string resourceName = "GpuFpConfig.sum.cl";
 
-            ErrorCode errorCode;
-
             var source = ProgramUtils.GetProgramSourceFromResource(Assembly.GetExecutingAssembly(), resourceName);
             var program = ProgramUtils.BuildProgramForDevice(context, device, source);
             ProgramUtils.SaveDisassembly(program, $"{resourceName}_disassembly.txt");
 
+            ErrorCode errorCode;
             var kernels = Cl.CreateKernelsInProgram(program, out errorCode);
             errorCode.Check("CreateKernelsInProgram");
 
@@ -71,43 +70,7 @@ namespace GpuFpConfig
             using (var mem2 = new PinnedArrayOfStruct<float>(context, floatsB))
             using (var mem3 = new PinnedArrayOfStruct<float>(context, floatsC, MemMode.WriteOnly))
             {
-                var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
-                errorCode.Check("CreateCommandQueue");
-
-                errorCode = Cl.SetKernelArg(kernel, 0, mem1.Buffer); errorCode.Check();
-                errorCode = Cl.SetKernelArg(kernel, 1, mem2.Buffer); errorCode.Check();
-                errorCode = Cl.SetKernelArg(kernel, 2, mem3.Buffer); errorCode.Check();
-
-                var globalWorkSize = new[] { (IntPtr)size };
-                Event e1;
-                errorCode = Cl.EnqueueNDRangeKernel(
-                    commandQueue,
-                    kernel,
-                    (uint)globalWorkSize.Length, // workDim
-                    null, // globalWorkOffset
-                    globalWorkSize,
-                    null, // localWorkSize
-                    0, // numEventsInWaitList
-                    null, // eventWaitList
-                    out e1);
-                errorCode.Check("EnqueueNDRangeKernel");
-
-                Event e2;
-                errorCode = Cl.EnqueueReadBuffer(
-                    commandQueue,
-                    mem3.Buffer,
-                    Bool.False, // blockingRead
-                    IntPtr.Zero, // offsetInBytes
-                    (IntPtr)mem3.Size,
-                    mem3.Handle,
-                    0, // numEventsInWaitList
-                    null, // eventWaitList
-                    out e2);
-                errorCode.Check("EnqueueReadBuffer");
-
-                var evs = new[] { e2 };
-                errorCode = Cl.WaitForEvents((uint)evs.Length, evs);
-                errorCode.Check("WaitForEvents");
+                KernelRunner.RunKernel(context, device, kernel, size, new[] {2}, mem1, mem2, mem3);
             }
 
             Console.WriteLine($"floatsC[0]: {floatsC[0]}");

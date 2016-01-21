@@ -4,7 +4,7 @@ using OpenCL.Net;
 
 namespace ClUtils
 {
-    public class PinnedArrayOfStruct<T> : IDisposable where T : struct
+    public class PinnedArrayOfStruct<T> : IPinnedArrayOfStruct, IDisposable where T : struct
     {
         private GCHandle _gcHandle;
 
@@ -22,11 +22,11 @@ namespace ClUtils
 
             var memFlags = MemFlags.UseHostPtr;
             memFlags |= memMode == MemMode.ReadOnly ? MemFlags.ReadOnly : MemFlags.None;
-            memFlags |= memMode == MemMode.WriteOnly? MemFlags.WriteOnly : MemFlags.None;
+            memFlags |= memMode == MemMode.WriteOnly ? MemFlags.WriteOnly : MemFlags.None;
             memFlags |= memMode == MemMode.ReadWrite ? MemFlags.ReadWrite : MemFlags.None;
 
             ErrorCode errorCode;
-            Buffer = Cl.CreateBuffer(context, memFlags, (IntPtr)Size, Handle, out errorCode);
+            Buffer = Cl.CreateBuffer(context, memFlags, (IntPtr) Size, Handle, out errorCode);
             errorCode.Check("CreateBuffer");
         }
 
