@@ -20,7 +20,9 @@ Playing around with [OpenCL](https://www.khronos.org/opencl/) from C# using [Ope
         * `CL_KERNEL_LOCAL_MEM_SIZE`
         * `CL_KERNEL_PRIVATE_MEM_SIZE`
 * [ReductionScalar](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionScalar)
-    * Implement reduction (see section 10.2 _Numerical Reduction_ in _OpenCL in Action_)
+    * Implement reduction using scalar float (see section 10.2 _Numerical Reduction_ in _OpenCL in Action_)
+* [ReductionVector](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionVector)
+    * Implement reduction using vector float4 (see section 10.2 _Numerical Reduction_ in _OpenCL in Action_)
 
 ## Links
 
