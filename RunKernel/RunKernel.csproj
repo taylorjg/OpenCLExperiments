@@ -55,6 +55,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <EmbeddedResource Include="sum.cl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClUtils\ClUtils.csproj">

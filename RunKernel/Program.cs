@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ClUtils;
 using OpenCL.Net;
+using Environment = OpenCL.Net.Environment;
 
 namespace RunKernel
 {
@@ -38,6 +41,32 @@ namespace RunKernel
 
         private static void RunKernel(Context context, Device device)
         {
+            const string resourceName = "RunKernel.sum.cl";
+
+            var source = ProgramUtils.GetProgramSourceFromResource(Assembly.GetExecutingAssembly(), resourceName);
+            var program = ProgramUtils.BuildProgramForDevice(context, device, source);
+
+            ErrorCode errorCode;
+            var kernels = Cl.CreateKernelsInProgram(program, out errorCode);
+            errorCode.Check("CreateKernelsInProgram");
+
+            var kernel = kernels[0];
+
+            const int size = 1024;
+
+            var floatsA = Enumerable.Range(1, size).Select(n => (float)n).ToArray();
+            var floatsB = Enumerable.Range(1, size).Select(n => (float)n).ToArray();
+            var floatsC = new float[size];
+
+            using (var mem1 = new PinnedArrayOfStruct<float>(context, floatsA))
+            using (var mem2 = new PinnedArrayOfStruct<float>(context, floatsB))
+            using (var mem3 = new PinnedArrayOfStruct<float>(context, floatsC, MemMode.WriteOnly))
+            {
+                KernelRunner.RunKernel(context, device, kernel, size, new[] { 2 }, mem1, mem2, mem3);
+            }
+
+            Console.WriteLine($"floatsC[0]: {floatsC[0]}");
+            Console.WriteLine($"floatsC[1023]: {floatsC[1023]}");
         }
     }
 }
