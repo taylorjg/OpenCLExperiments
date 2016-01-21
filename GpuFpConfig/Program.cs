@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using ClUtils;
@@ -68,9 +67,9 @@ namespace GpuFpConfig
             var floatsB = Enumerable.Range(1, size).Select(n => (float)n).ToArray();
             var floatsC = new float[size];
 
-            using (var mem1 = MyPinnedArrayOfStruct.Create(context, floatsA))
-            using (var mem2 = MyPinnedArrayOfStruct.Create(context, floatsB))
-            using (var mem3 = MyPinnedArrayOfStruct.Create(context, floatsC, MemMode.WriteOnly))
+            using (var mem1 = new PinnedArrayOfStruct<float>(context, floatsA))
+            using (var mem2 = new PinnedArrayOfStruct<float>(context, floatsB))
+            using (var mem3 = new PinnedArrayOfStruct<float>(context, floatsC, MemMode.WriteOnly))
             {
                 var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
                 errorCode.Check("CreateCommandQueue");

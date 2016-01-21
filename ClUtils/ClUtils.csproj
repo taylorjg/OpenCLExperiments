@@ -49,7 +49,7 @@
     <Compile Include="Dump.cs" />
     <Compile Include="ErrorCodeExtensions.cs" />
     <Compile Include="MemMode.cs" />
-    <Compile Include="MyPinnedArrayOfStruct.cs" />
+    <Compile Include="PinnedArrayOfStruct.cs" />
     <Compile Include="ProgramUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
