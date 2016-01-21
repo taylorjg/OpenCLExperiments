@@ -1,4 +1,4 @@
-namespace GpuFpConfig
+namespace ClUtils
 {
     public enum MemMode
     {

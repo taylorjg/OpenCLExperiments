@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ClUtils;
 using OpenCL.Net;
 using Environment = OpenCL.Net.Environment;
 
@@ -14,13 +15,13 @@ namespace GpuFpConfig
         {
             ErrorCode errorCode;
             var platformIds = Cl.GetPlatformIDs(out errorCode);
-            Check(errorCode, "GetPlatformIDs");
+            errorCode.Check("GetPlatformIDs");
 
             var platformNames = platformIds.Select(platformId =>
             {
                 ErrorCode innerErrorCode;
                 var platformName = Cl.GetPlatformInfo(platformId, PlatformInfo.Name, out innerErrorCode);
-                Check(innerErrorCode, "GetPlatformIDs");
+                innerErrorCode.Check("GetPlatformIDs");
                 return platformName.ToString();
             });
 
@@ -69,11 +70,11 @@ namespace GpuFpConfig
             ErrorCode errorCode;
 
             var deviceName = Cl.GetDeviceInfo(device, DeviceInfo.Name, out errorCode).ToString();
-            Check(errorCode, "GetDeviceInfo(DeviceInfo.Name)");
+            errorCode.Check("GetDeviceInfo(DeviceInfo.Name)");
             Console.WriteLine($"DeviceInfo.Name: {deviceName}");
 
             var fpConfig = Cl.GetDeviceInfo(device, DeviceInfo.SingleFpConfig, out errorCode).CastTo<int>();
-            Check(errorCode, "GetDeviceInfo(DeviceInfo.SingleFpConfig)");
+            errorCode.Check("GetDeviceInfo(DeviceInfo.SingleFpConfig)");
             if ((fpConfig & ClFpDenorm) != 0) Console.WriteLine("CL_FP_DENORM");
             if ((fpConfig & ClFpInfNan) != 0) Console.WriteLine("CL_FP_INF_NAN");
             if ((fpConfig & ClFpRoundToNearest) != 0) Console.WriteLine("CL_FP_ROUND_TO_NEAREST");
@@ -87,28 +88,28 @@ namespace GpuFpConfig
             Console.WriteLine($"Vendor: {vendor}");
 
             var globalMemSize = Cl.GetDeviceInfo(device, DeviceInfo.GlobalMemSize, out errorCode).CastTo<long>();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.GlobalMemSize)");
             Console.WriteLine($"GlobalMemSize: {globalMemSize}");
 
             var localMemSize = Cl.GetDeviceInfo(device, DeviceInfo.LocalMemSize, out errorCode).CastTo<long>();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.LocalMemSize)");
             Console.WriteLine($"LocalMemSize: {localMemSize}");
 
             var maxComputeUnits = Cl.GetDeviceInfo(device, DeviceInfo.MaxComputeUnits, out errorCode).CastTo<int>();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.MaxComputeUnits)");
             Console.WriteLine($"MaxComputeUnits: {maxComputeUnits}");
 
             var maxWorkGroupSize = Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkGroupSize, out errorCode).CastTo<int>();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkGroupSize)");
             Console.WriteLine($"MaxWorkGroupSize: {maxWorkGroupSize}");
 
             var maxWorkItemSizes = Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemSizes, out errorCode).CastTo<int>();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkItemSizes)");
             Console.WriteLine($"MaxWorkItemSizes: {maxWorkItemSizes}");
 
             var maxWorkItemDimensions = Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemDimensions, out errorCode).CastTo<int>();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkItemDimensions)");
             Console.WriteLine($"MaxWorkItemDimensions: {maxWorkItemDimensions}");
-        }
-
-        private static void Check(ErrorCode errorCode, string message)
-        {
-            if (errorCode != ErrorCode.Success)
-                throw new Exception($"{message}: {errorCode}");
         }
 
         private static void DumpWorkGroupInfo(Context context, Device device)
@@ -122,13 +123,13 @@ namespace GpuFpConfig
 
             ErrorCode errorCode;
             var program = Cl.CreateProgramWithSource(context, (uint)strings.Length, strings, lengths, out errorCode);
-            errorCode.Check();
+            errorCode.Check("CreateProgramWithSource");
 
             errorCode = Cl.BuildProgram(program, 1, new [] {device}, string.Empty, null, IntPtr.Zero);
-            errorCode.Check();
+            errorCode.Check("BuildProgram");
 
             var binSizes = Cl.GetProgramInfo(program, ProgramInfo.BinarySizes, out errorCode).CastToArray<int>(1);
-            errorCode.Check();
+            errorCode.Check("GetProgramInfo(ProgramInfo.BinarySizes)");
             var binSize = binSizes[0];
             Console.WriteLine($"binSize: {binSize}");
 
@@ -136,79 +137,86 @@ namespace GpuFpConfig
             var buffers = new InfoBufferArray(buffer);
             IntPtr ret;
             errorCode = Cl.GetProgramInfo(program, ProgramInfo.Binaries, (IntPtr)4, buffers, out ret);
-            errorCode.Check();
+            errorCode.Check("GetProgramInfo(ProgramInfo.Binaries)");
 
             var disassemblyBytes = buffer.CastToArray<byte>(binSize);
             File.WriteAllBytes($"{resourceName}_disassembly.txt", disassemblyBytes);
 
             var kernels = Cl.CreateKernelsInProgram(program, out errorCode);
+            errorCode.Check("CreateKernelsInProgram");
             var kernel = kernels[0];
 
             var workGroupSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
-            errorCode.Check();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
             Console.WriteLine($"WorkGroupSize: {workGroupSize}");
 
             var localMemSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.LocalMemSize, out errorCode).CastTo<int>();
-            errorCode.Check();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.LocalMemSize)");
             Console.WriteLine($"LocalMemSize: {localMemSize}");
 
             var compileWorkGroupSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.CompileWorkGroupSize, out errorCode).CastTo<int>();
-            errorCode.Check();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.CompileWorkGroupSize)");
             Console.WriteLine($"CompileWorkGroupSize: {compileWorkGroupSize}");
 
             var preferredWorkGroupSizeMultiple = Cl.GetKernelWorkGroupInfo(kernel, device, (KernelWorkGroupInfo)0x11B3, out errorCode).CastTo<int>();
-            errorCode.Check();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.PreferredWorkGroupSizeMultiple)");
             Console.WriteLine($"PreferredWorkGroupSizeMultiple: {preferredWorkGroupSizeMultiple}");
 
             var privateMemSize = Cl.GetKernelWorkGroupInfo(kernel, device, (KernelWorkGroupInfo)0x11B4, out errorCode).CastTo<int>();
-            errorCode.Check();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.PrivateMemSize)");
             Console.WriteLine($"PrivateMemSize: {privateMemSize}");
 
             const int size = 1024;
+
             var floatsA = Enumerable.Range(1, size).Select(n => (float)n).ToArray();
             var floatsB = Enumerable.Range(1, size).Select(n => (float)n).ToArray();
             var floatsC = new float[size];
 
-            var mem1 = new MyPinnedArrayOfStruct(context, floatsA);
-            var mem2 = new MyPinnedArrayOfStruct(context, floatsB);
-            var mem3 = new MyPinnedArrayOfStruct(context, floatsC, MemMode.WriteOnly);
+            using (var mem1 = MyPinnedArrayOfStruct.Create(context, floatsA))
+            using (var mem2 = MyPinnedArrayOfStruct.Create(context, floatsB))
+            using (var mem3 = MyPinnedArrayOfStruct.Create(context, floatsC, MemMode.WriteOnly))
+            {
+                var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
+                errorCode.Check("CreateCommandQueue");
 
-            var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
-            errorCode.Check();
+                errorCode = Cl.SetKernelArg(kernel, 0, mem1.Buffer); errorCode.Check();
+                errorCode = Cl.SetKernelArg(kernel, 1, mem2.Buffer); errorCode.Check();
+                errorCode = Cl.SetKernelArg(kernel, 2, mem3.Buffer); errorCode.Check();
 
-            errorCode = Cl.SetKernelArg(kernel, 0, mem1.Buffer); errorCode.Check();
-            errorCode = Cl.SetKernelArg(kernel, 1, mem2.Buffer); errorCode.Check();
-            errorCode = Cl.SetKernelArg(kernel, 2, mem3.Buffer); errorCode.Check();
+                var globalWorkSize = new[] { (IntPtr)size };
+                Event e1;
+                errorCode = Cl.EnqueueNDRangeKernel(
+                    commandQueue,
+                    kernel,
+                    (uint)globalWorkSize.Length, // workDim
+                    null, // globalWorkOffset
+                    globalWorkSize,
+                    null, // localWorkSize
+                    0, // numEventsInWaitList
+                    null, // eventWaitList
+                    out e1);
+                errorCode.Check("EnqueueNDRangeKernel");
 
-            var globalWorkSize = new[] { (IntPtr)size};
-            Event e1;
-            errorCode = Cl.EnqueueNDRangeKernel(
-                commandQueue,
-                kernel,
-                (uint) globalWorkSize.Length, // workDim
-                null, // globalWorkOffset
-                globalWorkSize,
-                null, // localWorkSize
-                0, // numEventsInWaitList
-                null, // eventWaitList
-                out e1);
-            errorCode.Check();
+                Event e2;
+                errorCode = Cl.EnqueueReadBuffer(
+                    commandQueue,
+                    mem3.Buffer,
+                    Bool.False, // blockingRead
+                    IntPtr.Zero, // offsetInBytes
+                    (IntPtr)mem3.Size,
+                    mem3.Handle,
+                    0, // numEventsInWaitList
+                    null, // eventWaitList
+                    out e2);
+                errorCode.Check("EnqueueReadBuffer");
 
-            Event e2;
-            errorCode = Cl.EnqueueReadBuffer(
-                commandQueue,
-                mem3.Buffer,
-                Bool.False, // blockingRead
-                IntPtr.Zero, // offsetInBytes
-                (IntPtr)mem3.Size,
-                mem3.Handle,
-                0, // numEventsInWaitList
-                null, // eventWaitList
-                out e2);
-            errorCode.Check();
+                var evs = new[] { e2 };
+                errorCode = Cl.WaitForEvents((uint)evs.Length, evs);
+                errorCode.Check("WaitForEvents");
+            }
 
-            var evs = new[] {e2};
-            Cl.WaitForEvents((uint)evs.Length, evs);
+            Console.WriteLine($"floatsC[0]: {floatsC[0]}");
+            Console.WriteLine($"floatsC[1023]: {floatsC[1023]}");
         }
 
         private static string GetProgramSourceFromResource(string resourceName)
