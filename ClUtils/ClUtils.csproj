@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dump.cs" />
     <Compile Include="ErrorCodeExtensions.cs" />
     <Compile Include="MemMode.cs" />
     <Compile Include="MyPinnedArrayOfStruct.cs" />
