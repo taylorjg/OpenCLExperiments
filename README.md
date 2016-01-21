@@ -3,16 +3,24 @@
 
 Playing around with [OpenCL](https://www.khronos.org/opencl/) from C# using [OpenCL.NET](https://openclnet.codeplex.com/).
 
-* [FpConfig]()
-    * _TBD_
-* [RunKernel]()
-    * _TBD_
-* [SaveBinaries]()
-    * _TBD_
-* [WorkGroupInfo]()
-    * _TBD_
-* [ReductionScalar]()
-    * _TBD_
+* [FpConfig](https://github.com/taylorjg/OpenCLExperiments/tree/master/FpConfig)
+    * Dump out device floating point configuration info
+        * `CL_DEVICE_SINGLE_FP_CONFIG`
+* [RunKernel](https://github.com/taylorjg/OpenCLExperiments/tree/master/RunKernel)
+    * Run a simple kernel
+* [SaveBinaries](https://github.com/taylorjg/OpenCLExperiments/tree/master/SaveBinaries)
+    * Build a `program` and save the CL binaries to files
+        * `CL_PROGRAM_BINARY_SIZES`
+        * `CL_PROGRAM_BINARIES`
+* [WorkGroupInfo](https://github.com/taylorjg/OpenCLExperiments/tree/master/WorkGroupInfo)
+    * Dump out kernel work group info
+        * `CL_KERNEL_WORK_GROUP_SIZE`
+        * `CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE`
+        * `CL_KERNEL_COMPILE_WORK_GROUP_SIZE`
+        * `CL_KERNEL_LOCAL_MEM_SIZE`
+        * `CL_KERNEL_PRIVATE_MEM_SIZE`
+* [ReductionScalar](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionScalar)
+    * Implement reduction (see section 10.2 _Numerical Reduction_ in _OpenCL in Action_)
 
 ## Links
 
@@ -23,7 +31,7 @@ Playing around with [OpenCL](https://www.khronos.org/opencl/) from C# using [Ope
 * [OpenCL.NET](https://openclnet.codeplex.com/)
 * [OpenCL.NET (NuGet)](https://www.nuget.org/packages/OpenCL.Net/)
 * [OpenCL in Action (Manning Publications Co.)](https://www.manning.com/books/opencl-in-action)
-* [Simon McIntosh-Smith ()](https://www.cs.bris.ac.uk/home/simonm/)
+* [Simon McIntosh-Smith](https://www.cs.bris.ac.uk/home/simonm/)
     * _Head of the Microelectronics Group and Bristol University Business Fellow_
     * _Senior Lecturer in High Performance Computing and Architectures_
     * [OpenCL: A Hands-on Introduction](https://www.cs.bris.ac.uk/home/simonm/SC13/OpenCL_slides_SC13.pdf)
