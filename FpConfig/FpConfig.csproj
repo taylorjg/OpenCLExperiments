@@ -54,8 +54,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <EmbeddedResource Include="blank.cl" />
-    <EmbeddedResource Include="sum.cl" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
