@@ -7,6 +7,7 @@ namespace ClUtils
 {
     public class MyPinnedArrayOfStruct : IDisposable
     {
+        private readonly Type _elementType;
         private readonly object _arr;
         private readonly MemMode _memMode;
 
@@ -14,19 +15,19 @@ namespace ClUtils
         public int Size { get; }
         public IntPtr Handle { get; }
 
-        private MyPinnedArrayOfStruct(Context context, float[] arr, MemMode memMode = MemMode.ReadOnly)
+        private MyPinnedArrayOfStruct(Context context, Type elementType, object arr, int length, MemMode memMode = MemMode.ReadOnly)
         {
+            _elementType = elementType;
             _arr = arr;
             _memMode = memMode;
 
-            Size = arr.Length*sizeof (float);
+            var elementSize = Marshal.SizeOf(elementType);
+            Size = length*elementSize;
             Handle = Marshal.AllocHGlobal(Size);
 
-            if (memMode == MemMode.ReadOnly || memMode == MemMode.ReadWrite)
+            if (IsReadable)
             {
-                var elementType = typeof (float);
-                var action1 = ElementTypeToCopyActions[elementType].Item1;
-                action1(arr, Handle);
+                ElementTypeToCopyActions[elementType].Item1(arr, Handle);
             }
 
             var memFlags = MemFlags.UseHostPtr;
@@ -41,11 +42,9 @@ namespace ClUtils
 
         public void Dispose()
         {
-            if (_memMode == MemMode.ReadWrite || _memMode == MemMode.WriteOnly)
+            if (IsWriteable)
             {
-                var elementType = typeof(float);
-                var action2 = ElementTypeToCopyActions[elementType].Item2;
-                action2(_arr, Handle);
+                ElementTypeToCopyActions[_elementType].Item2(_arr, Handle);
             }
 
             Marshal.FreeHGlobal(Handle);
@@ -55,31 +54,68 @@ namespace ClUtils
 
         public static MyPinnedArrayOfStruct Create(Context context, float[] arr, MemMode memMode = MemMode.ReadOnly)
         {
-            return new MyPinnedArrayOfStruct(context, arr, memMode);
+            return new MyPinnedArrayOfStruct(context, typeof(float), arr, arr.Length, memMode);
         }
 
-        //public static MyPinnedArrayOfStruct Create(Context context, int[] arr, MemMode memMode = MemMode.ReadOnly)
-        //{
-        //    return new MyPinnedArrayOfStruct(context, arr, memMode);
-        //}
-
-        private static readonly Dictionary<Type, Tuple<Action<object, IntPtr>, Action<object, IntPtr>>> ElementTypeToCopyActions = new Dictionary
-            <Type, Tuple<Action<object, IntPtr>, Action<object, IntPtr>>>
+        public static MyPinnedArrayOfStruct Create(Context context, int[] arr, MemMode memMode = MemMode.ReadOnly)
         {
-            {
-                typeof (float),
-                Tuple.Create<Action<object, IntPtr>, Action<object, IntPtr>>(
-                    (obj, handle) =>
+            return new MyPinnedArrayOfStruct(context, typeof(int), arr, arr.Length, memMode);
+        }
+
+        public static MyPinnedArrayOfStruct Create(Context context, long[] arr, MemMode memMode = MemMode.ReadOnly)
+        {
+            return new MyPinnedArrayOfStruct(context, typeof(long), arr, arr.Length, memMode);
+        }
+
+        private bool IsReadable => _memMode == MemMode.ReadOnly || _memMode == MemMode.ReadWrite;
+        private bool IsWriteable => _memMode == MemMode.WriteOnly || _memMode == MemMode.ReadWrite;
+
+        private static readonly Dictionary<Type, Tuple<Action<object, IntPtr>, Action<object, IntPtr>>>
+            ElementTypeToCopyActions =
+                new Dictionary<Type, Tuple<Action<object, IntPtr>, Action<object, IntPtr>>>
+                {
                     {
-                        var arr = (float[]) obj;
-                        Marshal.Copy(arr, 0, handle, arr.Length);
+                        typeof (float),
+                        Tuple.Create<Action<object, IntPtr>, Action<object, IntPtr>>(
+                            (obj, handle) =>
+                            {
+                                var arr = (float[]) obj;
+                                Marshal.Copy(arr, 0, handle, arr.Length);
+                            },
+                            (obj, handle) =>
+                            {
+                                var arr = (float[]) obj;
+                                Marshal.Copy(handle, arr, 0, arr.Length);
+                            })
                     },
-                    (obj, handle) =>
                     {
-                        var arr = (float[]) obj;
-                        Marshal.Copy(handle, arr, 0, arr.Length);
-                    })
-            }
-        };
+                        typeof (int),
+                        Tuple.Create<Action<object, IntPtr>, Action<object, IntPtr>>(
+                            (obj, handle) =>
+                            {
+                                var arr = (int[]) obj;
+                                Marshal.Copy(arr, 0, handle, arr.Length);
+                            },
+                            (obj, handle) =>
+                            {
+                                var arr = (int[]) obj;
+                                Marshal.Copy(handle, arr, 0, arr.Length);
+                            })
+                    },
+                    {
+                        typeof (long),
+                        Tuple.Create<Action<object, IntPtr>, Action<object, IntPtr>>(
+                            (obj, handle) =>
+                            {
+                                var arr = (long[]) obj;
+                                Marshal.Copy(arr, 0, handle, arr.Length);
+                            },
+                            (obj, handle) =>
+                            {
+                                var arr = (long[]) obj;
+                                Marshal.Copy(handle, arr, 0, arr.Length);
+                            })
+                    }
+                };
     }
 }
