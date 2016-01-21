@@ -45,7 +45,7 @@ namespace SaveDisassembly
 
             var source = ProgramUtils.GetProgramSourceFromResource(Assembly.GetExecutingAssembly(), resourceName);
             var program = ProgramUtils.BuildProgramForDevice(context, device, source);
-            ProgramUtils.SaveDisassembly(program, $"{resourceName}_disassembly.txt");
+            ProgramUtils.SaveBinaries(program, $"{resourceName}_binary.txt");
         }
     }
 }

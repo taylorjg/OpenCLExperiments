@@ -39,31 +39,33 @@ namespace ClUtils
             return program;
         }
 
-        public static void SaveDisassembly(Program program, string fileName)
+        public static void SaveBinaries(Program program, string fileName)
         {
             ErrorCode errorCode;
 
             var numDevices = Cl.GetProgramInfo(program, ProgramInfo.NumDevices, out errorCode).CastTo<int>();
             errorCode.Check("GetProgramInfo(ProgramInfo.NumDevices)");
 
-            var binSizes = Cl.GetProgramInfo(program, ProgramInfo.BinarySizes, out errorCode).CastToArray<int>(numDevices);
+            var devices = Cl.GetProgramInfo(program, ProgramInfo.Devices, out errorCode).CastToArray<Device>(numDevices);
+            errorCode.Check("GetProgramInfo(ProgramInfo.Devices)");
+
+            var binarySizes = Cl.GetProgramInfo(program, ProgramInfo.BinarySizes, out errorCode).CastToArray<int>(numDevices);
             errorCode.Check("GetProgramInfo(ProgramInfo.BinarySizes)");
 
-            var binSize = binSizes[0];
-            Console.WriteLine($"binSize: {binSize}");
-
-            var bufferArray = new InfoBufferArray(binSizes.Select(bs => new InfoBuffer((IntPtr) bs)).ToArray());
-            IntPtr ret;
-            errorCode = Cl.GetProgramInfo(program, ProgramInfo.Binaries, bufferArray.Size, bufferArray, out ret);
+            var bufferArray = new InfoBufferArray(binarySizes.Select(bs => new InfoBuffer((IntPtr) bs)).ToArray());
+            IntPtr _;
+            errorCode = Cl.GetProgramInfo(program, ProgramInfo.Binaries, bufferArray.Size, bufferArray, out _);
             errorCode.Check("GetProgramInfo(ProgramInfo.Binaries)");
 
             var baseFileName = Path.GetFileNameWithoutExtension(fileName);
             var extension = Path.GetExtension(fileName);
 
-            foreach (var deviceNum in Enumerable.Range(0, numDevices))
+            foreach (var index in Enumerable.Range(0, numDevices))
             {
-                var disassemblyBytes = bufferArray[deviceNum].CastToArray<byte>(binSize);
-                File.WriteAllBytes($"{baseFileName}_{deviceNum}{extension}", disassemblyBytes);
+                var deviceName = Cl.GetDeviceInfo(devices[index], DeviceInfo.Name, out errorCode).ToString();
+                errorCode.Check("GetDeviceInfo(DeviceInfo.Name)");
+                var binary = bufferArray[index].CastToArray<byte>(binarySizes[index]);
+                File.WriteAllBytes($"{baseFileName}_device{index}_{deviceName}{extension}", binary);
             }
         }
     }
