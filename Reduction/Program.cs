@@ -31,7 +31,7 @@ namespace Reduction
             }
         }
 
-        private static void EnumerateDevices(Context context, IReadOnlyCollection<Device> devices)
+        private static void EnumerateDevices(Context context, IEnumerable<Device> devices)
         {
             foreach (var device in devices)
             {

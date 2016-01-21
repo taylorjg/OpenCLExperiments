@@ -65,7 +65,9 @@ namespace ClUtils
                 var deviceName = Cl.GetDeviceInfo(devices[index], DeviceInfo.Name, out errorCode).ToString();
                 errorCode.Check("GetDeviceInfo(DeviceInfo.Name)");
                 var binary = bufferArray[index].CastToArray<byte>(binarySizes[index]);
-                File.WriteAllBytes($"{baseFileName}_device{index}_{deviceName}{extension}", binary);
+                string deviceSpecificFileName = $"{baseFileName}_device{index}_{deviceName}{extension}";
+                File.WriteAllBytes(deviceSpecificFileName, binary);
+                Console.WriteLine($"Wrote {binary.Length} bytes to {deviceSpecificFileName}");
             }
         }
     }
