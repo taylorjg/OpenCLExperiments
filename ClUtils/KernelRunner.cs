@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using OpenCL.Net;
 
@@ -22,10 +23,11 @@ namespace ClUtils
 
             var setKernelArgErrorCodes = pinnedArrays.Select((pinnedArray, index) =>
             {
-                var innerErrorCode = Cl.SetKernelArg(kernel, (uint)index, pinnedArray.Buffer);
-                innerErrorCode.Check();
-                return innerErrorCode;
-            }).ToList();
+                var ec = Cl.SetKernelArg(kernel, (uint) index, pinnedArray.Buffer);
+                ec.Check($"SetKernelArg({index})");
+                return ec;
+            });
+            Debug.Assert(setKernelArgErrorCodes.All(e => e == ErrorCode.Success));
 
             var globalWorkSize = new[] {(IntPtr) size};
 

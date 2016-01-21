@@ -29,6 +29,11 @@ namespace ClUtils
             errorCode.Check("CreateProgramWithSource");
 
             errorCode = Cl.BuildProgram(program, 1, new[] { device }, string.Empty, null, IntPtr.Zero);
+            if (errorCode == ErrorCode.BuildProgramFailure)
+            {
+                var log = Cl.GetProgramBuildInfo(program, device, ProgramBuildInfo.Log, out errorCode).ToString();
+                throw new ApplicationException($"BuildProgram failed:{System.Environment.NewLine}{log}");
+            }
             errorCode.Check("BuildProgram");
 
             return program;

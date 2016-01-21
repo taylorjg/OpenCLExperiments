@@ -29,23 +29,23 @@ namespace ClUtils
 
             var globalMemSize = Cl.GetDeviceInfo(device, DeviceInfo.GlobalMemSize, out errorCode).CastTo<long>();
             errorCode.Check("GetDeviceInfo(DeviceInfo.GlobalMemSize)");
-            Console.WriteLine($"GlobalMemSize: {globalMemSize}");
+            Console.WriteLine($"GlobalMemSize: {globalMemSize:N0}");
 
             var localMemSize = Cl.GetDeviceInfo(device, DeviceInfo.LocalMemSize, out errorCode).CastTo<long>();
             errorCode.Check("GetDeviceInfo(DeviceInfo.LocalMemSize)");
-            Console.WriteLine($"LocalMemSize: {localMemSize}");
+            Console.WriteLine($"LocalMemSize: {localMemSize:N0}");
 
             var maxComputeUnits = Cl.GetDeviceInfo(device, DeviceInfo.MaxComputeUnits, out errorCode).CastTo<int>();
             errorCode.Check("GetDeviceInfo(DeviceInfo.MaxComputeUnits)");
-            Console.WriteLine($"MaxComputeUnits: {maxComputeUnits}");
+            Console.WriteLine($"MaxComputeUnits: {maxComputeUnits:N0}");
 
             var maxWorkGroupSize = Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkGroupSize, out errorCode).CastTo<int>();
             errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkGroupSize)");
-            Console.WriteLine($"MaxWorkGroupSize: {maxWorkGroupSize}");
+            Console.WriteLine($"MaxWorkGroupSize: {maxWorkGroupSize:N0}");
 
             var maxWorkItemSizes = Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemSizes, out errorCode).CastTo<int>();
             errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkItemSizes)");
-            Console.WriteLine($"MaxWorkItemSizes: {maxWorkItemSizes}");
+            Console.WriteLine($"MaxWorkItemSizes: {maxWorkItemSizes:N0}");
 
             var maxWorkItemDimensions = Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemDimensions, out errorCode).CastTo<int>();
             errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkItemDimensions)");
@@ -78,23 +78,23 @@ namespace ClUtils
 
             var workGroupSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
             errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
-            Console.WriteLine($"WorkGroupSize: {workGroupSize}");
+            Console.WriteLine($"WorkGroupSize: {workGroupSize:N0}");
 
             var preferredWorkGroupSizeMultiple = Cl.GetKernelWorkGroupInfo(kernel, device, (KernelWorkGroupInfo)0x11B3, out errorCode).CastTo<int>();
             errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.PreferredWorkGroupSizeMultiple)");
-            Console.WriteLine($"PreferredWorkGroupSizeMultiple: {preferredWorkGroupSizeMultiple}");
+            Console.WriteLine($"PreferredWorkGroupSizeMultiple: {preferredWorkGroupSizeMultiple:N0}");
 
             var compileWorkGroupSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.CompileWorkGroupSize, out errorCode).CastTo<int>();
             errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.CompileWorkGroupSize)");
-            Console.WriteLine($"CompileWorkGroupSize: {compileWorkGroupSize}");
+            Console.WriteLine($"CompileWorkGroupSize: {compileWorkGroupSize:N0}");
 
             var localMemSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.LocalMemSize, out errorCode).CastTo<int>();
             errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.LocalMemSize)");
-            Console.WriteLine($"LocalMemSize: {localMemSize}");
+            Console.WriteLine($"LocalMemSize: {localMemSize:N0}");
 
             var privateMemSize = Cl.GetKernelWorkGroupInfo(kernel, device, (KernelWorkGroupInfo) 0x11B4, out errorCode).CastTo<int>();
             errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.PrivateMemSize)");
-            Console.WriteLine($"PrivateMemSize: {privateMemSize}");
+            Console.WriteLine($"PrivateMemSize: {privateMemSize:N0}");
         }
     }
 }
