@@ -23,19 +23,8 @@ namespace ClUtils
             errorCode.Check("GetDeviceInfo(DeviceInfo.Name)");
             Console.WriteLine($"DeviceInfo.Name: {deviceName}");
 
-            var fpConfig = Cl.GetDeviceInfo(device, DeviceInfo.SingleFpConfig, out errorCode).CastTo<int>();
-            errorCode.Check("GetDeviceInfo(DeviceInfo.SingleFpConfig)");
-            if ((fpConfig & ClFpDenorm) != 0) Console.WriteLine("CL_FP_DENORM");
-            if ((fpConfig & ClFpInfNan) != 0) Console.WriteLine("CL_FP_INF_NAN");
-            if ((fpConfig & ClFpRoundToNearest) != 0) Console.WriteLine("CL_FP_ROUND_TO_NEAREST");
-            if ((fpConfig & ClFpRoundToZero) != 0) Console.WriteLine("CL_FP_ROUND_TO_ZERO");
-            if ((fpConfig & ClFpRoundToInf) != 0) Console.WriteLine("CL_FP_ROUND_TO_INF");
-            if ((fpConfig & ClFpFma) != 0) Console.WriteLine("CL_FP_FMA");
-            if ((fpConfig & ClFpSoftFloat) != 0) Console.WriteLine("CL_FP_SOFT_FLOAT");
-            if ((fpConfig & ClFpCorrectlyRoundedDivideSqrt) != 0)
-                Console.WriteLine("CL_FP_CORRECTLY_ROUNDED_DIVIDE_SQRT");
-
             var vendor = Cl.GetDeviceInfo(device, DeviceInfo.Vendor, out errorCode).ToString();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.Vendor)");
             Console.WriteLine($"Vendor: {vendor}");
 
             var globalMemSize = Cl.GetDeviceInfo(device, DeviceInfo.GlobalMemSize, out errorCode).CastTo<long>();
@@ -58,10 +47,29 @@ namespace ClUtils
             errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkItemSizes)");
             Console.WriteLine($"MaxWorkItemSizes: {maxWorkItemSizes}");
 
-            var maxWorkItemDimensions =
-                Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemDimensions, out errorCode).CastTo<int>();
+            var maxWorkItemDimensions = Cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemDimensions, out errorCode).CastTo<int>();
             errorCode.Check("GetDeviceInfo(DeviceInfo.MaxWorkItemDimensions)");
             Console.WriteLine($"MaxWorkItemDimensions: {maxWorkItemDimensions}");
+        }
+
+        public static void DeviceFpConfig(Device device)
+        {
+            ErrorCode errorCode;
+
+            var deviceName = Cl.GetDeviceInfo(device, DeviceInfo.Name, out errorCode).ToString();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.Name)");
+            Console.WriteLine($"DeviceInfo.Name: {deviceName}");
+
+            var fpConfig = Cl.GetDeviceInfo(device, DeviceInfo.SingleFpConfig, out errorCode).CastTo<int>();
+            errorCode.Check("GetDeviceInfo(DeviceInfo.SingleFpConfig)");
+            if ((fpConfig & ClFpDenorm) != 0) Console.WriteLine("CL_FP_DENORM");
+            if ((fpConfig & ClFpInfNan) != 0) Console.WriteLine("CL_FP_INF_NAN");
+            if ((fpConfig & ClFpRoundToNearest) != 0) Console.WriteLine("CL_FP_ROUND_TO_NEAREST");
+            if ((fpConfig & ClFpRoundToZero) != 0) Console.WriteLine("CL_FP_ROUND_TO_ZERO");
+            if ((fpConfig & ClFpRoundToInf) != 0) Console.WriteLine("CL_FP_ROUND_TO_INF");
+            if ((fpConfig & ClFpFma) != 0) Console.WriteLine("CL_FP_FMA");
+            if ((fpConfig & ClFpSoftFloat) != 0) Console.WriteLine("CL_FP_SOFT_FLOAT");
+            if ((fpConfig & ClFpCorrectlyRoundedDivideSqrt) != 0) Console.WriteLine("CL_FP_CORRECTLY_ROUNDED_DIVIDE_SQRT");
         }
 
         public static void WorkGroupInfo(Kernel kernel, Device device)

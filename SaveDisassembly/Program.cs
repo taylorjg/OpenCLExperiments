@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ClUtils;
 using OpenCL.Net;
 using Environment = OpenCL.Net.Environment;
 
-namespace GpuFpConfig
+namespace SaveDisassembly
 {
     internal static class Program
     {
@@ -25,16 +27,24 @@ namespace GpuFpConfig
             foreach (var platformName in platformNames)
             {
                 var environment = new Environment(platformName);
-                EnumerateDevices(environment.Devices);
+                EnumerateDevices(environment.Context, environment.Devices);
             }
         }
-
-        private static void EnumerateDevices(IEnumerable<Device> devices)
+        private static void EnumerateDevices(Context context, IReadOnlyCollection<Device> devices)
         {
             foreach (var device in devices)
-            {
-                Dump.DeviceFpConfig(device);
-            }
+                SaveDisassembly(context, device);
+
+            Console.WriteLine();
+        }
+
+        private static void SaveDisassembly(Context context, Device device)
+        {
+            const string resourceName = "SaveDisassembly.sum.cl";
+
+            var source = ProgramUtils.GetProgramSourceFromResource(Assembly.GetExecutingAssembly(), resourceName);
+            var program = ProgramUtils.BuildProgramForDevice(context, device, source);
+            ProgramUtils.SaveDisassembly(program, $"{resourceName}_disassembly.txt");
         }
     }
 }
