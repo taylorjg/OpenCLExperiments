@@ -4,7 +4,7 @@ using ClUtils;
 using OpenCL.Net;
 using Environment = OpenCL.Net.Environment;
 
-namespace GpuFpConfig
+namespace FpConfig
 {
     internal static class Program
     {
