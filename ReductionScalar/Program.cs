@@ -54,17 +54,19 @@ namespace ReductionScalar
 
             var kernel = kernels[0];
 
-            const int globalWorkSize = 1024 * 1024;
+            const int numValues = 1024 * 1024;
+            const int numValuesPerWorkItem = 1;
+            const int globalWorkSize = numValues/numValuesPerWorkItem;
             var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
             errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
             Console.WriteLine($"localWorkSize: {localWorkSize}");
-            var numWorkGroups = globalWorkSize / localWorkSize;
+            var numWorkGroups = globalWorkSize/localWorkSize;
 
             const int value = 42;
-            const int correctAnswer = globalWorkSize * value;
+            const int correctAnswer = numValues*value;
 
             var data = Enumerable.Repeat(value, globalWorkSize).Select(n => (float) n).ToArray();
-            var workGroupResults = new float[numWorkGroups];
+            var workGroupResults = new float[numWorkGroups*numValuesPerWorkItem];
 
             using (var mem1 = new PinnedArrayOfStruct<float>(context, data))
             using (var mem2 = new PinnedArrayOfStruct<float>(context, workGroupResults, MemMode.WriteOnly))
