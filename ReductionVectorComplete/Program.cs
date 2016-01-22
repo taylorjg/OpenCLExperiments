@@ -26,6 +26,7 @@ namespace ReductionVectorComplete
 
             foreach (var platformName in platformNames)
             {
+                Console.WriteLine($"platformName: {platformName}");
                 var environment = new Environment(platformName);
                 EnumerateDevices(environment.Context, environment.Devices);
             }
@@ -59,10 +60,10 @@ namespace ReductionVectorComplete
             const int numValues = 1024 * 1024;
             const int numValuesPerWorkItem = 4;
             var globalWorkSize = numValues/numValuesPerWorkItem;
-            var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel1, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
-            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
+            //var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel1, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
+            //errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
+            const int localWorkSize = 32;
             Console.WriteLine($"localWorkSize: {localWorkSize}");
-            //var numWorkGroups = globalWorkSize/localWorkSize;
 
             const int value = 42;
             const int correctAnswer = numValues * value;
@@ -81,6 +82,15 @@ namespace ReductionVectorComplete
 
                 errorCode = Cl.SetKernelArg<float>(kernel1, 1, localWorkSize * 4);
                 errorCode.Check("SetKernelArg(1)");
+
+                errorCode = Cl.SetKernelArg(kernel2, 0, mem1.Buffer);
+                errorCode.Check("SetKernelArg(0)");
+
+                errorCode = Cl.SetKernelArg<float>(kernel2, 1, localWorkSize * 4);
+                errorCode.Check("SetKernelArg(1)");
+
+                errorCode = Cl.SetKernelArg(kernel2, 2, mem2.Buffer);
+                errorCode.Check("SetKernelArg(2)");
 
                 var kernel1Events = new List<Event>();
 
@@ -103,14 +113,7 @@ namespace ReductionVectorComplete
                     if (globalWorkSize <= localWorkSize) break;
                 }
 
-                errorCode = Cl.SetKernelArg(kernel2, 0, mem1.Buffer);
-                errorCode.Check("SetKernelArg(0)");
-
-                errorCode = Cl.SetKernelArg<float>(kernel2, 1, localWorkSize * 4);
-                errorCode.Check("SetKernelArg(1)");
-
-                errorCode = Cl.SetKernelArg(kernel2, 2, mem2.Buffer);
-                errorCode.Check("SetKernelArg(2)");
+                Console.WriteLine($"Number of kernel1 invokations: {kernel1Events.Count}");
 
                 Event kernel2Event;
                 errorCode = Cl.EnqueueNDRangeKernel(
@@ -138,9 +141,8 @@ namespace ReductionVectorComplete
                     out readEvent);
                 errorCode.Check("EnqueueReadBuffer");
 
-                var evs = new[] { readEvent };
-                errorCode = Cl.WaitForEvents((uint)evs.Length, evs);
-                errorCode.Check("WaitForEvents");
+                errorCode = Cl.Finish(commandQueue);
+                errorCode.Check("Finish");
 
                 var start1 = Cl.GetEventProfilingInfo(kernel1Events.First(), ProfilingInfo.Start, out errorCode).CastTo<long>();
                 errorCode.Check("GetEventProfilingInfo(ProfilingInfo.Start)");
@@ -156,7 +158,7 @@ namespace ReductionVectorComplete
                 Console.WriteLine($"read buffer elapsed time: {end2 - start2:N0}ns");
             }
 
-            Console.WriteLine($"OpenCL final answer: {sum[0]:N0}; Correct answer: {correctAnswer:N0}");
+            Console.WriteLine($"OpenCL final answer: {Math.Truncate(sum[0]):N0}; Correct answer: {correctAnswer:N0}");
         }
     }
 }
