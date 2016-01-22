@@ -24,7 +24,8 @@ Playing around with [OpenCL](https://www.khronos.org/opencl/) from C# using [Ope
 * [ReductionVector](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionVector)
     * Implement reduction using vector float4 (see section 10.2 _Numerical Reduction_ in _OpenCL in Action_)
 * [ReductionVectorComplete](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionVectorComplete)
-    * Implement reduction using vector float4 (see section 10.3 _Synchronizing work-groups_ in _OpenCL in Action_)
+    * Like [ReductionVector](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionVector)
+    but do the final summing on the OpenCL device using a second kernel (see section 10.3 _Synchronizing work-groups_ in _OpenCL in Action_)
     * __Note: when I run this against my "Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz" device it gives crazy (i.e. wrong) results__
         * I get the same results in C++ too (TODO: post the C++ code)
 
