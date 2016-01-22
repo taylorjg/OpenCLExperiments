@@ -49,54 +49,83 @@ namespace ReductionVectorComplete
             var program = ProgramUtils.BuildProgramForDevice(context, device, source);
 
             ErrorCode errorCode;
-            var kernels = Cl.CreateKernelsInProgram(program, out errorCode);
+
+            var kernel1 = Cl.CreateKernel(program, "reductionVector", out errorCode);
             errorCode.Check("CreateKernelsInProgram");
 
-            var kernel = kernels[0];
+            var kernel2 = Cl.CreateKernel(program, "reductionComplete", out errorCode);
+            errorCode.Check("CreateKernelsInProgram");
 
             const int numValues = 1024 * 1024;
             const int numValuesPerWorkItem = 4;
-            const int globalWorkSize = numValues/numValuesPerWorkItem;
-            var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
+            var globalWorkSize = numValues/numValuesPerWorkItem;
+            var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel1, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
             errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
             Console.WriteLine($"localWorkSize: {localWorkSize}");
-            var numWorkGroups = globalWorkSize/localWorkSize;
+            //var numWorkGroups = globalWorkSize/localWorkSize;
 
             const int value = 42;
             const int correctAnswer = numValues * value;
 
             var data = Enumerable.Repeat(value, numValues).Select(n => (float)n).ToArray();
-            var workGroupResults = new float[numWorkGroups*numValuesPerWorkItem];
+            var sum = new float[1];
 
-            using (var mem1 = new PinnedArrayOfStruct<float>(context, data))
-            using (var mem2 = new PinnedArrayOfStruct<float>(context, workGroupResults, MemMode.WriteOnly))
+            using (var mem1 = new PinnedArrayOfStruct<float>(context, data, MemMode.ReadWrite))
+            using (var mem2 = new PinnedArrayOfStruct<float>(context, sum, MemMode.WriteOnly))
             {
                 var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
                 errorCode.Check("CreateCommandQueue");
 
-                errorCode = Cl.SetKernelArg(kernel, 0, mem1.Buffer);
+                errorCode = Cl.SetKernelArg(kernel1, 0, mem1.Buffer);
                 errorCode.Check("SetKernelArg(0)");
 
-                errorCode = Cl.SetKernelArg<float>(kernel, 1, localWorkSize * 4);
+                errorCode = Cl.SetKernelArg<float>(kernel1, 1, localWorkSize * 4);
                 errorCode.Check("SetKernelArg(1)");
 
-                errorCode = Cl.SetKernelArg(kernel, 2, mem2.Buffer);
+                var kernel1Events = new List<Event>();
+
+                for(;;)
+                {
+                    Event e;
+                    errorCode = Cl.EnqueueNDRangeKernel(
+                        commandQueue,
+                        kernel1,
+                        1, // workDim
+                        null, // globalWorkOffset
+                        new[] { (IntPtr)globalWorkSize },
+                        new[] { (IntPtr)localWorkSize },
+                        0, // numEventsInWaitList
+                        null, // eventWaitList
+                        out e);
+                    errorCode.Check("EnqueueNDRangeKernel");
+                    kernel1Events.Add(e);
+                    globalWorkSize /= localWorkSize;
+                    if (globalWorkSize <= localWorkSize) break;
+                }
+
+                errorCode = Cl.SetKernelArg(kernel2, 0, mem1.Buffer);
+                errorCode.Check("SetKernelArg(0)");
+
+                errorCode = Cl.SetKernelArg<float>(kernel2, 1, localWorkSize * 4);
+                errorCode.Check("SetKernelArg(1)");
+
+                errorCode = Cl.SetKernelArg(kernel2, 2, mem2.Buffer);
                 errorCode.Check("SetKernelArg(2)");
 
-                Event e1;
+                Event kernel2Event;
                 errorCode = Cl.EnqueueNDRangeKernel(
                     commandQueue,
-                    kernel,
+                    kernel2,
                     1, // workDim
                     null, // globalWorkOffset
-                    new[] {(IntPtr) globalWorkSize},
-                    new[] {(IntPtr) localWorkSize},
+                    new[] { (IntPtr)globalWorkSize },
+                    null, // localWorkSize
                     0, // numEventsInWaitList
                     null, // eventWaitList
-                    out e1);
+                    out kernel2Event);
                 errorCode.Check("EnqueueNDRangeKernel");
 
-                Event e2;
+                Event readEvent;
                 errorCode = Cl.EnqueueReadBuffer(
                     commandQueue,
                     mem2.Buffer,
@@ -106,29 +135,28 @@ namespace ReductionVectorComplete
                     mem2.Handle,
                     0, // numEventsInWaitList
                     null, // eventWaitList
-                    out e2);
+                    out readEvent);
                 errorCode.Check("EnqueueReadBuffer");
 
-                var evs = new[] { e2 };
+                var evs = new[] { readEvent };
                 errorCode = Cl.WaitForEvents((uint)evs.Length, evs);
                 errorCode.Check("WaitForEvents");
 
-                var start1 = Cl.GetEventProfilingInfo(e1, ProfilingInfo.Start, out errorCode).CastTo<long>();
+                var start1 = Cl.GetEventProfilingInfo(kernel1Events.First(), ProfilingInfo.Start, out errorCode).CastTo<long>();
                 errorCode.Check("GetEventProfilingInfo(ProfilingInfo.Start)");
-                var end1 = Cl.GetEventProfilingInfo(e1, ProfilingInfo.End, out errorCode).CastTo<long>();
+                var end1 = Cl.GetEventProfilingInfo(kernel2Event, ProfilingInfo.End, out errorCode).CastTo<long>();
                 errorCode.Check("GetEventProfilingInfo(ProfilingInfo.End)");
 
-                var start2 = Cl.GetEventProfilingInfo(e2, ProfilingInfo.Start, out errorCode).CastTo<long>();
+                var start2 = Cl.GetEventProfilingInfo(readEvent, ProfilingInfo.Start, out errorCode).CastTo<long>();
                 errorCode.Check("GetEventProfilingInfo(ProfilingInfo.Start)");
-                var end2 = Cl.GetEventProfilingInfo(e2, ProfilingInfo.End, out errorCode).CastTo<long>();
+                var end2 = Cl.GetEventProfilingInfo(readEvent, ProfilingInfo.End, out errorCode).CastTo<long>();
                 errorCode.Check("GetEventProfilingInfo(ProfilingInfo.End)");
 
-                Console.WriteLine($"e1 elapsed time: {end1 - start1:N0}ns");
-                Console.WriteLine($"e2 elapsed time: {end2 - start2:N0}ns");
+                Console.WriteLine($"kernel1/kernel2 elapsed time: {end1 - start1:N0}ns");
+                Console.WriteLine($"read buffer elapsed time: {end2 - start2:N0}ns");
             }
 
-            var finalAnswer = Math.Truncate(workGroupResults.Sum());
-            Console.WriteLine($"OpenCL final answer: {finalAnswer:N0}; Correct answer: {correctAnswer:N0}");
+            Console.WriteLine($"OpenCL final answer: {sum[0]:N0}; Correct answer: {correctAnswer:N0}");
         }
     }
 }
