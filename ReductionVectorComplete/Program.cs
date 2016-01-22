@@ -60,9 +60,8 @@ namespace ReductionVectorComplete
             const int numValues = 1024 * 1024;
             const int numValuesPerWorkItem = 4;
             var globalWorkSize = numValues/numValuesPerWorkItem;
-            //var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel1, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
-            //errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
-            const int localWorkSize = 32;
+            var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel1, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
+            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
             Console.WriteLine($"localWorkSize: {localWorkSize}");
 
             const int value = 42;
@@ -113,7 +112,7 @@ namespace ReductionVectorComplete
                     if (globalWorkSize <= localWorkSize) break;
                 }
 
-                Console.WriteLine($"Number of kernel1 invokations: {kernel1Events.Count}");
+                Console.WriteLine($"Number of kernel1 invocations: {kernel1Events.Count}");
 
                 Event kernel2Event;
                 errorCode = Cl.EnqueueNDRangeKernel(

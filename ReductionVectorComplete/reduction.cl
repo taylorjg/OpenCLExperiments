@@ -51,7 +51,6 @@ kernel void reductionComplete(
 
 	if (localId == 0)
 	{
-		// float4 finalPartialSum = partialSums[0];
 		*sum = partialSums[0].s0 + partialSums[0].s1 + partialSums[0].s2 + partialSums[0].s3;
 	}
 }
