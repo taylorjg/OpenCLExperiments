@@ -23,6 +23,10 @@ Playing around with [OpenCL](https://www.khronos.org/opencl/) from C# using [Ope
     * Implement reduction using scalar float (see section 10.2 _Numerical Reduction_ in _OpenCL in Action_)
 * [ReductionVector](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionVector)
     * Implement reduction using vector float4 (see section 10.2 _Numerical Reduction_ in _OpenCL in Action_)
+* [ReductionVectorComplete](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionVectorComplete)
+    * Implement reduction using vector float4 (see section 10.3 _Synchronizing work-groups_ in _OpenCL in Action_)
+    * __Note: when I run this against my "Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz" device it gives crazy (i.e. wrong) results__
+        * I get the same results in C++ too (TODO: post the C++ code)
 
 ## Links
 
