@@ -47,10 +47,8 @@ namespace RunKernel
             var program = ProgramUtils.BuildProgramForDevice(context, device, source);
 
             ErrorCode errorCode;
-            var kernels = Cl.CreateKernelsInProgram(program, out errorCode);
-            errorCode.Check("CreateKernelsInProgram");
-
-            var kernel = kernels[0];
+            var kernel = Cl.CreateKernel(program, "sum", out errorCode);
+            errorCode.Check("CreateKernel");
 
             const int size = 1024;
 

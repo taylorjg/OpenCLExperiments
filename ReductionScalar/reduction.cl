@@ -1,4 +1,4 @@
-kernel void reduction(
+kernel void reductionScalar(
 	global const float *restrict data,
 	local float *restrict partialSums,
 	global float *restrict workGroupResults)

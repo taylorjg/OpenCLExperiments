@@ -49,10 +49,8 @@ namespace ReductionVector
             var program = ProgramUtils.BuildProgramForDevice(context, device, source);
 
             ErrorCode errorCode;
-            var kernels = Cl.CreateKernelsInProgram(program, out errorCode);
-            errorCode.Check("CreateKernelsInProgram");
-
-            var kernel = kernels[0];
+            var kernel = Cl.CreateKernel(program, "reductionVector", out errorCode);
+            errorCode.Check("CreateKernel");
 
             const int numValues = 1024 * 1024;
             const int numValuesPerWorkItem = 4;
