@@ -1,5 +1,6 @@
 kernel void reductionVector(
-	global float4 *restrict data,
+	global const float4 *restrict dataIn,
+	global float4 *restrict dataOut,
 	local float4 *restrict partialSums)
 {
 	const int globalId = get_global_id(0);
@@ -7,7 +8,7 @@ kernel void reductionVector(
 	const int workGroupId = get_group_id(0);
 	const int workGroupSize = get_local_size(0);
 
-	partialSums[localId] = data[globalId];
+	partialSums[localId] = dataIn[globalId];
 
 	barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -23,7 +24,7 @@ kernel void reductionVector(
 
 	if (localId == 0)
 	{
-		data[workGroupId] = partialSums[0];
+		dataOut[workGroupId] = partialSums[0];
 	}
 }
 

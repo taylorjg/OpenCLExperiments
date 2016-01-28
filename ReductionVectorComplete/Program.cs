@@ -60,41 +60,44 @@ namespace ReductionVectorComplete
             const int numValues = 1024 * 1024;
             const int numValuesPerWorkItem = 4;
             var globalWorkSize = numValues/numValuesPerWorkItem;
-            var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel1, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
-            errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
-            Console.WriteLine($"localWorkSize: {localWorkSize}");
+
+            //var localWorkSize = Cl.GetKernelWorkGroupInfo(kernel1, device, KernelWorkGroupInfo.WorkGroupSize, out errorCode).CastTo<int>();
+            //errorCode.Check("GetKernelWorkGroupInfo(KernelWorkGroupInfo.WorkGroupSize)");
+            const int localWorkSize = 32;
 
             const int value = 42;
             const int correctAnswer = numValues * value;
 
             var data = Enumerable.Repeat(value, numValues).Select(n => (float)n).ToArray();
+            var zeros = Enumerable.Repeat(0, numValues).Select(n => (float)n).ToArray();
             var sum = new float[1];
 
-            using (var mem1 = new PinnedArrayOfStruct<float>(context, data, MemMode.ReadWrite))
-            using (var mem2 = new PinnedArrayOfStruct<float>(context, sum, MemMode.WriteOnly))
+            using (var memData1 = new PinnedArrayOfStruct<float>(context, data, MemMode.ReadWrite))
+            using (var memData2 = new PinnedArrayOfStruct<float>(context, zeros, MemMode.ReadWrite))
+            using (var memSum = new PinnedArrayOfStruct<float>(context, sum, MemMode.WriteOnly))
             {
                 var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
                 errorCode.Check("CreateCommandQueue");
 
-                errorCode = Cl.SetKernelArg(kernel1, 0, mem1.Buffer);
-                errorCode.Check("SetKernelArg(0)");
-
-                errorCode = Cl.SetKernelArg<float>(kernel1, 1, localWorkSize * 4);
-                errorCode.Check("SetKernelArg(1)");
-
-                errorCode = Cl.SetKernelArg(kernel2, 0, mem1.Buffer);
-                errorCode.Check("SetKernelArg(0)");
-
-                errorCode = Cl.SetKernelArg<float>(kernel2, 1, localWorkSize * 4);
-                errorCode.Check("SetKernelArg(1)");
-
-                errorCode = Cl.SetKernelArg(kernel2, 2, mem2.Buffer);
-                errorCode.Check("SetKernelArg(2)");
-
                 var kernel1Events = new List<Event>();
+                var memResult = memData2;
 
-                for(;;)
+                foreach (var index in Enumerable.Range(0, int.MaxValue))
                 {
+                    var memDataIn = (index%2 == 0) ? memData1 : memData2;
+                    var memDataOut = (index%2 == 0) ? memData2 : memData1;
+                    memResult = memDataOut;
+
+                    errorCode = Cl.SetKernelArg(kernel1, 0, memDataIn.Buffer);
+                    errorCode.Check("SetKernelArg(0)");
+
+                    errorCode = Cl.SetKernelArg(kernel1, 1, memDataOut.Buffer);
+                    errorCode.Check("SetKernelArg(1)");
+
+                    errorCode = Cl.SetKernelArg<float>(kernel1, 2, localWorkSize * 4);
+                    errorCode.Check("SetKernelArg(2)");
+
+                    Console.WriteLine($"Calling EnqueueNDRangeKernel(kernel1) with globalWorkSize: {globalWorkSize}; localWorkSize: {localWorkSize}; num work groups: {globalWorkSize/localWorkSize}");
                     Event e;
                     errorCode = Cl.EnqueueNDRangeKernel(
                         commandQueue,
@@ -112,8 +115,16 @@ namespace ReductionVectorComplete
                     if (globalWorkSize <= localWorkSize) break;
                 }
 
-                Console.WriteLine($"Number of kernel1 invocations: {kernel1Events.Count}");
+                errorCode = Cl.SetKernelArg(kernel2, 0, memResult.Buffer);
+                errorCode.Check("SetKernelArg(0)");
 
+                errorCode = Cl.SetKernelArg<float>(kernel2, 1, localWorkSize * 4);
+                errorCode.Check("SetKernelArg(1)");
+
+                errorCode = Cl.SetKernelArg(kernel2, 2, memSum.Buffer);
+                errorCode.Check("SetKernelArg(2)");
+
+                Console.WriteLine($"Calling EnqueueNDRangeKernel(kernel2) with globalWorkSize: {globalWorkSize}");
                 Event kernel2Event;
                 errorCode = Cl.EnqueueNDRangeKernel(
                     commandQueue,
@@ -130,11 +141,11 @@ namespace ReductionVectorComplete
                 Event readEvent;
                 errorCode = Cl.EnqueueReadBuffer(
                     commandQueue,
-                    mem2.Buffer,
+                    memSum.Buffer,
                     Bool.False, // blockingRead
                     IntPtr.Zero, // offsetInBytes
-                    (IntPtr)mem2.Size,
-                    mem2.Handle,
+                    (IntPtr)memSum.Size,
+                    memSum.Handle,
                     0, // numEventsInWaitList
                     null, // eventWaitList
                     out readEvent);
