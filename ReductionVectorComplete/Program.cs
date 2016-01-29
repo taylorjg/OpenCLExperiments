@@ -133,7 +133,14 @@ namespace ReductionVectorComplete
                     1, // workDim
                     null, // globalWorkOffset
                     new[] { (IntPtr)globalWorkSize },
-                    new[] { (IntPtr)globalWorkSize }, // WORKAROUND: check details...
+                    /*
+                     * Force the use of a single work group by setting 'localWorkSize'
+                     * to be the same as 'globalWorkSize'. Without doing this,
+                     * "Experimental OpenCL 2.0 CPU Only Platform" seems to use 8 work groups,
+                     * each with a local size of 1, which means that we end up with an incorrect
+                     * result.
+                     */
+                    new[] { (IntPtr)globalWorkSize },
                     0, // numEventsInWaitList
                     null, // eventWaitList
                     out kernel2Event);
