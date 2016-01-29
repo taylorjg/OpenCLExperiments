@@ -29,7 +29,7 @@ kernel void reductionVector(
 }
 
 kernel void reductionComplete(
-	global const float4 *restrict data, 
+	global const float4 *restrict data,
     local float4 *restrict partialSums,
 	global float *restrict sum)
 {
@@ -52,6 +52,7 @@ kernel void reductionComplete(
 
 	if (localId == 0)
 	{
-		*sum = partialSums[0].s0 + partialSums[0].s1 + partialSums[0].s2 + partialSums[0].s3;
+		float4 ps0 = partialSums[0];
+		*sum = ps0.s0 + ps0.s1 + ps0.s2 + ps0.s3;
 	}
 }
