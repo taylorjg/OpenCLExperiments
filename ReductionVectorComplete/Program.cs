@@ -82,7 +82,7 @@ namespace ReductionVectorComplete
                 var kernel1Events = new List<Event>();
                 var memResult = memData2;
 
-                errorCode = Cl.SetKernelArg<float>(kernel1, 2, localWorkSize * 4);
+                errorCode = Cl.SetKernelArg<float>(kernel1, 2, localWorkSize * numValuesPerWorkItem);
                 errorCode.Check("SetKernelArg(2)");
 
                 foreach (var index in Enumerable.Range(0, int.MaxValue))
@@ -119,7 +119,7 @@ namespace ReductionVectorComplete
                 errorCode = Cl.SetKernelArg(kernel2, 0, memResult.Buffer);
                 errorCode.Check("SetKernelArg(0)");
 
-                errorCode = Cl.SetKernelArg<float>(kernel2, 1, localWorkSize * 4);
+                errorCode = Cl.SetKernelArg<float>(kernel2, 1, localWorkSize * numValuesPerWorkItem);
                 errorCode.Check("SetKernelArg(1)");
 
                 errorCode = Cl.SetKernelArg(kernel2, 2, memSum.Buffer);
