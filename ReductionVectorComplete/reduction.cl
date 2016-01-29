@@ -31,7 +31,8 @@ kernel void reductionVector(
 kernel void reductionComplete(
 	global const float4 *restrict data,
     local float4 *restrict partialSums,
-	global float *restrict sum)
+	global float *restrict sum,
+	global float4 *restrict dataOut)
 {
 	const int localId = get_local_id(0);
 	const int workGroupSize = get_local_size(0);
@@ -54,5 +55,8 @@ kernel void reductionComplete(
 	{
 		float4 ps0 = partialSums[0];
 		*sum = ps0.s0 + ps0.s1 + ps0.s2 + ps0.s3;
+		//dataOut[0].s0 = get_global_size(0);
+		//dataOut[0].s0 = get_local_size(0);
+		dataOut[0].s0 = get_num_groups(0);
 	}
 }

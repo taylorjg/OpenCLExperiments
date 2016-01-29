@@ -70,10 +70,12 @@ namespace ReductionVectorComplete
 
             var data1 = Enumerable.Repeat(value, numValues).Select(n => (float)n).ToArray();
             var data2 = Enumerable.Repeat(0, numValues).Select(n => (float)n).ToArray();
+            var data3 = Enumerable.Repeat(0, numValues).Select(n => (float)n).ToArray();
             var sum = new float[1];
 
             using (var memData1 = new PinnedArrayOfStruct<float>(context, data1, MemMode.ReadWrite))
             using (var memData2 = new PinnedArrayOfStruct<float>(context, data2, MemMode.ReadWrite))
+            using (var memData3 = new PinnedArrayOfStruct<float>(context, data3, MemMode.ReadWrite))
             using (var memSum = new PinnedArrayOfStruct<float>(context, sum, MemMode.WriteOnly))
             {
                 var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
@@ -125,6 +127,9 @@ namespace ReductionVectorComplete
                 errorCode = Cl.SetKernelArg(kernel2, 2, memSum.Buffer);
                 errorCode.Check("SetKernelArg(2)");
 
+                errorCode = Cl.SetKernelArg(kernel2, 3, memData3.Buffer);
+                errorCode.Check("SetKernelArg(3)");
+
                 Console.WriteLine($"Calling EnqueueNDRangeKernel(kernel2) with globalWorkSize: {globalWorkSize}");
                 Event kernel2Event;
                 errorCode = Cl.EnqueueNDRangeKernel(
@@ -133,11 +138,13 @@ namespace ReductionVectorComplete
                     1, // workDim
                     null, // globalWorkOffset
                     new[] { (IntPtr)globalWorkSize },
-                    new[] { (IntPtr)globalWorkSize }, // WORKAROUND: check details...
+                    null, // new[] { (IntPtr)globalWorkSize }, // WORKAROUND: check details...
                     0, // numEventsInWaitList
                     null, // eventWaitList
                     out kernel2Event);
                 errorCode.Check("EnqueueNDRangeKernel");
+
+                InspectMem(commandQueue, kernel2Event, memData3, data3);
 
                 Event readEvent;
                 errorCode = Cl.EnqueueReadBuffer(
@@ -170,6 +177,30 @@ namespace ReductionVectorComplete
             }
 
             Console.WriteLine($"OpenCL final answer: {Math.Truncate(sum[0]):N0}; Correct answer: {correctAnswer:N0}");
+        }
+
+        private static void InspectMem(CommandQueue commandQueue, Event e, IPinnedArrayOfStruct mem, IReadOnlyList<float> data)
+        {
+            Event readEvent;
+
+            var errorCode = Cl.EnqueueReadBuffer(
+                commandQueue,
+                mem.Buffer,
+                Bool.False, // blockingRead
+                IntPtr.Zero, // offsetInBytes
+                (IntPtr)mem.Size,
+                mem.Handle,
+                1, // numEventsInWaitList
+                new[] { e }, // eventWaitList
+                out readEvent);
+
+            errorCode.Check("EnqueueReadBuffer");
+
+            Cl.WaitForEvents(1, new[] { readEvent });
+
+            var firstValue = data[0];
+            var count = data.Count(f => Math.Abs(f - firstValue) < float.Epsilon);
+            Console.WriteLine($"First {count} values are {firstValue}");
         }
     }
 }
