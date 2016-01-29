@@ -75,7 +75,7 @@ namespace ReductionVector
                 errorCode = Cl.SetKernelArg(kernel, 0, mem1.Buffer);
                 errorCode.Check("SetKernelArg(0)");
 
-                errorCode = Cl.SetKernelArg<float>(kernel, 1, localWorkSize*4);
+                errorCode = Cl.SetKernelArg<float>(kernel, 1, localWorkSize* numValuesPerWorkItem);
                 errorCode.Check("SetKernelArg(1)");
 
                 errorCode = Cl.SetKernelArg(kernel, 2, mem2.Buffer);
