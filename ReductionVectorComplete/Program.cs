@@ -68,12 +68,12 @@ namespace ReductionVectorComplete
             const int value = 42;
             const int correctAnswer = numValues * value;
 
-            var data = Enumerable.Repeat(value, numValues).Select(n => (float)n).ToArray();
-            var zeros = Enumerable.Repeat(0, numValues).Select(n => (float)n).ToArray();
+            var data1 = Enumerable.Repeat(value, numValues).Select(n => (float)n).ToArray();
+            var data2 = Enumerable.Repeat(0, numValues).Select(n => (float)n).ToArray();
             var sum = new float[1];
 
-            using (var memData1 = new PinnedArrayOfStruct<float>(context, data, MemMode.ReadWrite))
-            using (var memData2 = new PinnedArrayOfStruct<float>(context, zeros, MemMode.ReadWrite))
+            using (var memData1 = new PinnedArrayOfStruct<float>(context, data1, MemMode.ReadWrite))
+            using (var memData2 = new PinnedArrayOfStruct<float>(context, data2, MemMode.ReadWrite))
             using (var memSum = new PinnedArrayOfStruct<float>(context, sum, MemMode.WriteOnly))
             {
                 var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
@@ -81,21 +81,23 @@ namespace ReductionVectorComplete
 
                 var kernel1Events = new List<Event>();
                 var memResult = memData2;
+                var dataResult = data2;
+
+                errorCode = Cl.SetKernelArg<float>(kernel1, 2, localWorkSize * 4);
+                errorCode.Check("SetKernelArg(2)");
 
                 foreach (var index in Enumerable.Range(0, int.MaxValue))
                 {
                     var memDataIn = (index%2 == 0) ? memData1 : memData2;
                     var memDataOut = (index%2 == 0) ? memData2 : memData1;
                     memResult = memDataOut;
+                    dataResult = (index%2 == 0) ? data2 : data1;
 
                     errorCode = Cl.SetKernelArg(kernel1, 0, memDataIn.Buffer);
                     errorCode.Check("SetKernelArg(0)");
 
                     errorCode = Cl.SetKernelArg(kernel1, 1, memDataOut.Buffer);
                     errorCode.Check("SetKernelArg(1)");
-
-                    errorCode = Cl.SetKernelArg<float>(kernel1, 2, localWorkSize * 4);
-                    errorCode.Check("SetKernelArg(2)");
 
                     Console.WriteLine($"Calling EnqueueNDRangeKernel(kernel1) with globalWorkSize: {globalWorkSize}; localWorkSize: {localWorkSize}; num work groups: {globalWorkSize/localWorkSize}");
                     Event e;
@@ -111,6 +113,9 @@ namespace ReductionVectorComplete
                         out e);
                     errorCode.Check("EnqueueNDRangeKernel");
                     kernel1Events.Add(e);
+
+                    InspectMemResult(commandQueue, e, memResult, dataResult);
+
                     globalWorkSize /= localWorkSize;
                     if (globalWorkSize <= localWorkSize) break;
                 }
@@ -169,6 +174,30 @@ namespace ReductionVectorComplete
             }
 
             Console.WriteLine($"OpenCL final answer: {Math.Truncate(sum[0]):N0}; Correct answer: {correctAnswer:N0}");
+        }
+
+        private static void InspectMemResult(CommandQueue commandQueue, Event e, IPinnedArrayOfStruct memResult, IReadOnlyList<float> dataResult)
+        {
+            Event readEvent;
+
+            var errorCode = Cl.EnqueueReadBuffer(
+                commandQueue,
+                memResult.Buffer,
+                Bool.False, // blockingRead
+                IntPtr.Zero, // offsetInBytes
+                (IntPtr)memResult.Size,
+                memResult.Handle,
+                1, // numEventsInWaitList
+                new[] { e }, // eventWaitList
+                out readEvent);
+
+            errorCode.Check("EnqueueReadBuffer");
+
+            Cl.WaitForEvents(1, new [] {readEvent});
+
+            var firstValue = dataResult[0];
+            var count = dataResult.Count(f => Math.Abs(f - firstValue) < float.Epsilon);
+            Console.WriteLine($"First {count} values are {firstValue}");
         }
     }
 }
