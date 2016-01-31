@@ -27,8 +27,9 @@ Playing around with [OpenCL](https://www.khronos.org/opencl/) from C# using [Ope
     * Like [ReductionVector](https://github.com/taylorjg/OpenCLExperiments/tree/master/ReductionVector)
     but do the final summing on the OpenCL device using a second kernel (see section 10.3 _Synchronizing work-groups_ in _OpenCL in Action_)
     * __Note: when I run this against my "Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz" device it gives crazy (i.e. wrong) results__
-        * I get the same results in C too (code [here](https://github.com/taylorjg/Ch10_reduction_complete))
-        * __UPDATE__: See [this discussion on the Intel forums](https://software.intel.com/en-us/forums/opencl/topic/558984) for an explanation of why this happens
+        * __UPDATE__: See [this discussion on the Intel forums](https://software.intel.com/en-us/forums/opencl/topic/558984) for an explanation of why this happens (race condition)
+        * I get the same results using the C code from the book's download (VS2015 project can be found [here](https://github.com/taylorjg/Ch10_reduction_complete))
+        * I get the same results in C++ too (fixed code can be found [here](https://github.com/taylorjg/ReductionCpp))
 
 ## Links
 
