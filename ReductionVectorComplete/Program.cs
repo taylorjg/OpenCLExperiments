@@ -69,11 +69,11 @@ namespace ReductionVectorComplete
             const int correctAnswer = numValues * value;
 
             var data1 = Enumerable.Repeat(value, numValues).Select(n => (float)n).ToArray();
-            var data2 = Enumerable.Repeat(0, numValues).Select(n => (float)n).ToArray();
+            var data2 = Enumerable.Repeat(0, globalWorkSize/localWorkSize*numValuesPerWorkItem).Select(n => (float)n).ToArray();
             var sum = new float[1];
 
             using (var memData1 = new PinnedArrayOfStruct<float>(context, data1, MemMode.ReadWrite))
-            using (var memData2 = new PinnedArrayOfStruct<float>(context, data2, MemMode.ReadWrite))
+            using (var memData2 = new PinnedArrayOfStruct<float>(context, data2, MemMode.WriteOnly))
             using (var memSum = new PinnedArrayOfStruct<float>(context, sum, MemMode.WriteOnly))
             {
                 var commandQueue = Cl.CreateCommandQueue(context, device, CommandQueueProperties.ProfilingEnable, out errorCode);
